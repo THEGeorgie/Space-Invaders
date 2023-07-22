@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using SDL2;
 using System.Runtime.InteropServices;
-using System.Xml.Schema;
-using SDL2;
 using static SDL2.SDL;
 
 namespace SI
@@ -12,20 +9,20 @@ namespace SI
         static int WINDOW_WIDTH = 800;
         static int WINDOW_HEIGHT = 600;
 
-        static SDL_Rect playerRect;
         static SDL_Rect bulletRect;
+        static SDL_Rect playerRect;
         static SDL_Rect bulletAreaRect;
         Program()
         {
+            bulletRect.w = 7;
+            bulletRect.h = 20;
+            bulletRect.x = playerRect.x;
+            bulletRect.y = playerRect.y;
+
             playerRect.w = 100;
             playerRect.h = 100;
             playerRect.x = (WINDOW_WIDTH / 2) - (100 / 2);
             playerRect.y = 400;
-
-            bulletRect.w = 5;
-            bulletRect.w = 10;
-            bulletRect.x = playerRect.x;
-            bulletRect.y = playerRect.y;
 
             bulletAreaRect.w = WINDOW_WIDTH;
             bulletAreaRect.y = WINDOW_HEIGHT;
@@ -47,7 +44,7 @@ namespace SI
             SDL_CreateWindowAndRenderer(Program.WINDOW_WIDTH, Program.WINDOW_HEIGHT, 0, out window, out renderer);
             SDL_SetWindowTitle(window, "Space Invaders");
             texturePlayer = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, (int)SDL_TextureAccess.SDL_TEXTUREACCESS_TARGET, 100, 100);
-            textureBullet = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, (int)SDL_TextureAccess.SDL_TEXTUREACCESS_TARGET, 5, 10);
+            textureBullet = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, (int)SDL_TextureAccess.SDL_TEXTUREACCESS_TARGET, 100, 100);
 
             SDL_Event events;
             IntPtr keyboardState;
@@ -62,12 +59,12 @@ namespace SI
                 SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
                 SDL_RenderClear(renderer);
 
-                SDL_SetRenderTarget(renderer, texturePlayer);
-                SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+                SDL_SetRenderTarget(renderer, textureBullet);
+                SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
                 SDL_RenderClear(renderer);
 
-                SDL_SetRenderTarget(renderer, textureBullet);
-                SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+                SDL_SetRenderTarget(renderer, texturePlayer);
+                SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
                 SDL_RenderClear(renderer);
 
                 SDL_SetRenderTarget(renderer, IntPtr.Zero);
@@ -94,16 +91,17 @@ namespace SI
                             {
                                 loop = false;
                             }
-                            if (GetKey(SDL_Keycode.SDLK_SPACE)) {
-                                Console.WriteLine("The x of bullet is " + bulletRect.x + " \n the y of the bullet is " + bulletRect.y);
-                                while (bulletRect.x < bulletAreaRect.w && bulletRect.y < bulletAreaRect.h) {
+                            if (GetKey(SDL_Keycode.SDLK_SPACE))
+                            {
+                                while (bulletAreaRect.h >= bulletRect.y && bulletAreaRect.w >= bulletRect.y) {                                    Console.WriteLine("The x of bullet is " + bulletRect.x + " \n the y of the bullet is " + bulletRect.y);
                                     shoot(TARGET_FPS, deltaTime);
-                                    SDL_RenderCopy(renderer, textureBullet, ref bulletAreaRect, ref bulletRect);
+                                    SDL_RenderCopy(renderer, textureBullet, ref bulletAreaRect, ref playerRect);
                                     SDL_RenderCopy(renderer, texturePlayer, IntPtr.Zero, ref playerRect);
                                     SDL_RenderPresent(renderer);
                                 }
                                 bulletRect.x = playerRect.x;
                                 bulletRect.y = playerRect.y;
+
                             }
                             break;
                     }
@@ -115,6 +113,8 @@ namespace SI
 
             SDL_DestroyWindow(window);
             SDL_DestroyRenderer(renderer);
+            SDL_DestroyTexture(textureBullet);
+            SDL_DestroyTexture(texturePlayer);
             SDL_Quit();
             return 0;
         }
@@ -144,7 +144,8 @@ namespace SI
                 playerRect.x += (int)buffer;
             }
         }
-        static void shoot(int targetFps, float deltaTime) {
+        static void shoot(int targetFps, float deltaTime)
+        {
             float buffer;
             buffer = (float)10 * targetFps * deltaTime;
             bulletRect.y += (int)buffer;
@@ -153,6 +154,6 @@ namespace SI
 
     class Game
     {
-        
+
     }
 }
