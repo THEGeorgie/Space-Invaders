@@ -11,23 +11,23 @@ namespace SI
 
         static SDL_Rect bulletRect;
         static SDL_Rect playerRect;
-        static SDL_Rect bulletAreaRect;
+        static SDL_Rect AreaRect;
         Program()
         {
-            bulletRect.w = 7;
-            bulletRect.h = 20;
-            bulletRect.x = playerRect.x;
-            bulletRect.y = playerRect.y;
-
             playerRect.w = 100;
             playerRect.h = 100;
             playerRect.x = (WINDOW_WIDTH / 2) - (100 / 2);
             playerRect.y = 400;
 
-            bulletAreaRect.w = WINDOW_WIDTH;
-            bulletAreaRect.y = WINDOW_HEIGHT;
-            bulletAreaRect.x = 0;
-            bulletAreaRect.y = 0;
+            bulletRect.w = 7;
+            bulletRect.h = 20;
+            bulletRect.x = playerRect.x;
+            bulletRect.y = playerRect.y;  
+
+            AreaRect.w = WINDOW_WIDTH;
+            AreaRect.h = WINDOW_HEIGHT;
+            AreaRect.x = 0;
+            AreaRect.y = 0;
         }
 
         static int Main(String[] args)
@@ -40,7 +40,6 @@ namespace SI
             var textureBullet = IntPtr.Zero;
 
             SDL_Init(SDL_INIT_VIDEO);
-
             SDL_CreateWindowAndRenderer(Program.WINDOW_WIDTH, Program.WINDOW_HEIGHT, 0, out window, out renderer);
             SDL_SetWindowTitle(window, "Space Invaders");
             texturePlayer = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, (int)SDL_TextureAccess.SDL_TEXTUREACCESS_TARGET, 100, 100);
@@ -49,13 +48,13 @@ namespace SI
             SDL_Event events;
             IntPtr keyboardState;
             int arrayKeys;
-            int TARGET_FPS = 144;
+            int TARGET_FPS = 60;
 
             float deltaTime = (float)1 / TARGET_FPS;
             bool loop = true;
+            float buffer;
             while (loop)
             {
-
                 SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
                 SDL_RenderClear(renderer);
 
@@ -66,8 +65,9 @@ namespace SI
                 SDL_SetRenderTarget(renderer, texturePlayer);
                 SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
                 SDL_RenderClear(renderer);
-
+                
                 SDL_SetRenderTarget(renderer, IntPtr.Zero);
+                SDL_RenderDrawLine(renderer,AreaRect.x, AreaRect.y, bulletRect.x, bulletRect.y);
 
                 keyboardState = SDL_GetKeyboardState(out arrayKeys);
 
@@ -93,20 +93,26 @@ namespace SI
                             }
                             if (GetKey(SDL_Keycode.SDLK_SPACE))
                             {
-                                while (bulletAreaRect.h >= bulletRect.y && bulletAreaRect.w >= bulletRect.y) {                                    Console.WriteLine("The x of bullet is " + bulletRect.x + " \n the y of the bullet is " + bulletRect.y);
-                                    shoot(TARGET_FPS, deltaTime);
-                                    SDL_RenderCopy(renderer, textureBullet, ref bulletAreaRect, ref playerRect);
+                                buffer = (float)1 * TARGET_FPS * deltaTime;
+                                Console.WriteLine("The x of bullet is " + bulletRect.x + " \n the y of the bullet is " + bulletRect.y);
+                                while(WINDOW_WIDTH > bulletRect.x && WINDOW_HEIGHT > bulletRect.y) {
+                                    bulletRect.y -= (int)buffer;
+                                    SDL_RenderCopy(renderer, textureBullet, ref AreaRect, ref bulletRect);
                                     SDL_RenderCopy(renderer, texturePlayer, IntPtr.Zero, ref playerRect);
                                     SDL_RenderPresent(renderer);
                                 }
-                                bulletRect.x = playerRect.x;
-                                bulletRect.y = playerRect.y;
+                                
+                                
+
+
+
 
                             }
                             break;
                     }
                 }
 
+                //SDL_RenderCopy(renderer, textureBullet, ref AreaRect, ref bulletRect);
                 SDL_RenderCopy(renderer, texturePlayer, IntPtr.Zero, ref playerRect);
                 SDL_RenderPresent(renderer);
             }
