@@ -111,6 +111,7 @@ namespace SI
                     }
                 }
 
+                SDL_Delay(30);
                 timeold = timenew;
                 prag.present((int)ticks);
                 
@@ -141,11 +142,10 @@ namespace SI
             SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
             SDL_RenderClear(renderer);
 
-            if (shoot == true) {
                 SDL_SetRenderTarget(renderer, textureEnemy);
                 SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
                 SDL_RenderClear(renderer);
-            }
+
 
 
             SDL_SetRenderTarget(renderer, IntPtr.Zero);
@@ -170,13 +170,12 @@ namespace SI
                     }
                     else
                     {
-                        Console.WriteLine("Tick speed is:" + ticks);
-                        //prag.moveEnemy();
+                        moveEnemy();
                         SDL_RenderCopy(renderer, textureEnemy, IntPtr.Zero, ref enemyRect[i]);
                     }
                 }
             }
-
+            
             SDL_RenderCopy(renderer, texturePlayer, IntPtr.Zero, ref playerRect);
             SDL_RenderPresent(renderer);
         }
@@ -196,7 +195,6 @@ namespace SI
             float buffer;
             //Changing the bullet speed
             buffer = (float)15 * TARGET_FPS * deltaTime;
-            SDL_Delay(40);
             bulletRect.y -= (int)buffer;
             for (int i = 0; i < enemyRect.Length; i++) {
                 if (bulletRect.y < 0 || SDL_IntersectRect(ref enemyRect[i], ref bulletRect, out collisionRect) == SDL_bool.SDL_TRUE)
@@ -228,24 +226,35 @@ namespace SI
         void moveEnemy()
         {
             float buffer;
-            buffer = (float)10 * TARGET_FPS * deltaTime;
+            bool loop = false;
+            buffer = (float)3 * TARGET_FPS * deltaTime;
             int len = enemyRect.Length;
-
-            while (enemyRect[len - 1].x != WINDOW_WIDTH - 100) {
-                for (int i = 0; i < len; i++)
-                {
-                    //SDL_Delay(20);
-                    enemyRect[i].x -= (int)buffer;
-                }
-            }
-            while (enemyRect[0].x != 100) {
-                for (int i = 0; i < len; i++)
-                {
-                    //SDL_Delay(20);
+            int k = 0;
+            Console.WriteLine("Window border for enemy" + (WINDOW_WIDTH - 100) + "The x of the array of enemy is" + enemyRect[len - 1].x);
+            if (enemyRect[len - 1].x != WINDOW_WIDTH - 100 && loop == false) {
+                for (int i = 0; i < len; i++) {
                     enemyRect[i].x += (int)buffer;
+                    if (enemyRect[len - 1].x == WINDOW_WIDTH - 100)
+                    {
+                        loop = true;
+                    }
                 }
+                
             }
-            
+            else if (enemyRect[0].x != 100 && loop == true)
+            {
+                for (int i = 0; i < len; i++)
+                {
+                    enemyRect[i].x -= (int)buffer;
+                    if (enemyRect[0].x == 100)
+                    {
+                        loop = false;
+                    }
+                }
+                
+            }
+
+
         }
     }
 
