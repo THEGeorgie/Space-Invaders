@@ -1,4 +1,5 @@
 ﻿using SDL2;
+using System;
 using System.Runtime.InteropServices;
 using static SDL2.SDL;
 
@@ -9,11 +10,25 @@ namespace SI
         static int WINDOW_WIDTH = 800;
         static int WINDOW_HEIGHT = 600;
 
+        static int TARGET_FPS = 60;
+        float deltaTime;
+
         static SDL_Rect bulletRect;
         static SDL_Rect playerRect;
-        static SDL_Rect AreaRect;
+
+        nint renderer = IntPtr.Zero;
+        nint window = IntPtr.Zero;
+        nint texturePlayer = IntPtr.Zero;
+        nint textureBullet = IntPtr.Zero;
+
+        public bool shoot = false;
         Program()
         {
+            SDL_Init(SDL_INIT_VIDEO);
+            SDL_CreateWindowAndRenderer(Program.WINDOW_WIDTH, Program.WINDOW_HEIGHT, 0, out window, out renderer);
+            SDL_SetWindowTitle(window, "Space Invaders");
+            texturePlayer = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, (int)SDL_TextureAccess.SDL_TEXTUREACCESS_TARGET, 100, 100);
+
             playerRect.w = 100;
             playerRect.h = 100;
             playerRect.x = (WINDOW_WIDTH / 2) - (100 / 2);
@@ -21,53 +36,31 @@ namespace SI
 
             bulletRect.w = 7;
             bulletRect.h = 20;
-            bulletRect.x = playerRect.x;
-            bulletRect.y = playerRect.y;  
+            bulletRect.x = playerRect.x + 43;
+            bulletRect.y = playerRect.y;
 
-            AreaRect.w = WINDOW_WIDTH;
-            AreaRect.h = WINDOW_HEIGHT;
-            AreaRect.x = 0;
-            AreaRect.y = 0;
+            deltaTime = (float)1 / TARGET_FPS;
+        }
+        ~Program() {
+            SDL_DestroyWindow(window);
+            SDL_DestroyRenderer(renderer);
+            SDL_DestroyTexture(textureBullet);
+            SDL_DestroyTexture(texturePlayer);
+            SDL_Quit();
         }
 
         static int Main(String[] args)
         {
             Program prag = new Program();
 
-            var renderer = IntPtr.Zero;
-            var window = IntPtr.Zero;
-            var texturePlayer = IntPtr.Zero;
-            var textureBullet = IntPtr.Zero;
-
-            SDL_Init(SDL_INIT_VIDEO);
-            SDL_CreateWindowAndRenderer(Program.WINDOW_WIDTH, Program.WINDOW_HEIGHT, 0, out window, out renderer);
-            SDL_SetWindowTitle(window, "Space Invaders");
-            texturePlayer = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, (int)SDL_TextureAccess.SDL_TEXTUREACCESS_TARGET, 100, 100);
-            textureBullet = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, (int)SDL_TextureAccess.SDL_TEXTUREACCESS_TARGET, 100, 100);
-
+            
             SDL_Event events;
             IntPtr keyboardState;
             int arrayKeys;
-            int TARGET_FPS = 60;
-
-            float deltaTime = (float)1 / TARGET_FPS;
             bool loop = true;
-            float buffer;
             while (loop)
             {
-                SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-                SDL_RenderClear(renderer);
-
-                SDL_SetRenderTarget(renderer, textureBullet);
-                SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-                SDL_RenderClear(renderer);
-
-                SDL_SetRenderTarget(renderer, texturePlayer);
-                SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
-                SDL_RenderClear(renderer);
-                
-                SDL_SetRenderTarget(renderer, IntPtr.Zero);
-                SDL_RenderDrawLine(renderer,AreaRect.x, AreaRect.y, bulletRect.x, bulletRect.y);
+                prag.update();
 
                 keyboardState = SDL_GetKeyboardState(out arrayKeys);
 
@@ -81,11 +74,11 @@ namespace SI
                         case SDL_EventType.SDL_KEYDOWN:
                             if (GetKey(SDL_Keycode.SDLK_LEFT))
                             {
-                                movePlayer(-1, TARGET_FPS, deltaTime);
+                                prag.movePlayer(-1);
                             }
                             if (GetKey(SDL_Keycode.SDLK_RIGHT))
                             {
-                                movePlayer(1, TARGET_FPS, deltaTime);
+                                prag.movePlayer(1);
                             }
                             if (GetKey(SDL_Keycode.SDLK_ESCAPE))
                             {
@@ -93,38 +86,53 @@ namespace SI
                             }
                             if (GetKey(SDL_Keycode.SDLK_SPACE))
                             {
-                                buffer = (float)1 * TARGET_FPS * deltaTime;
-                                Console.WriteLine("The x of bullet is " + bulletRect.x + " \n the y of the bullet is " + bulletRect.y);
-                                while(WINDOW_WIDTH > bulletRect.x && WINDOW_HEIGHT > bulletRect.y) {
-                                    bulletRect.y -= (int)buffer;
-                                    SDL_RenderCopy(renderer, textureBullet, ref AreaRect, ref bulletRect);
-                                    SDL_RenderCopy(renderer, texturePlayer, IntPtr.Zero, ref playerRect);
-                                    SDL_RenderPresent(renderer);
-                                }
-                                
-                                
-
-
-
+                                prag.shoot = true;
+                                prag.update();
 
                             }
                             break;
                     }
                 }
 
-                //SDL_RenderCopy(renderer, textureBullet, ref AreaRect, ref bulletRect);
-                SDL_RenderCopy(renderer, texturePlayer, IntPtr.Zero, ref playerRect);
-                SDL_RenderPresent(renderer);
+                prag.present();
+                
             }
 
-            SDL_DestroyWindow(window);
-            SDL_DestroyRenderer(renderer);
-            SDL_DestroyTexture(textureBullet);
-            SDL_DestroyTexture(texturePlayer);
-            SDL_Quit();
+            
             return 0;
         }
+        void update() {
+            
 
+            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+            SDL_RenderClear(renderer);
+
+            if (shoot == true) {
+                textureBullet = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, (int)SDL_TextureAccess.SDL_TEXTUREACCESS_TARGET, 100, 100);
+                SDL_SetRenderTarget(renderer, textureBullet);
+                SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+                SDL_RenderClear(renderer);
+            }
+            else
+            {
+                bulletRect.y = playerRect.y;
+                bulletRect.x = playerRect.x + 47;
+            }
+
+            SDL_SetRenderTarget(renderer, texturePlayer);
+            SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+            SDL_RenderClear(renderer);
+
+            SDL_SetRenderTarget(renderer, IntPtr.Zero);
+        }
+
+        void present() {
+            if (shoot == true) {
+                projectile();
+            }
+            SDL_RenderCopy(renderer, texturePlayer, IntPtr.Zero, ref playerRect);
+            SDL_RenderPresent(renderer);
+        }
         static bool GetKey(SDL.SDL_Keycode _keycode)
         {
             int arraySize;
@@ -136,11 +144,28 @@ namespace SI
             isKeyPressed = keys[keycode] == 1;
             return isKeyPressed;
         }
-
-        static void movePlayer(int xPos, int targetFps, float deltaTime)
+        void projectile()
         {
             float buffer;
-            buffer = (float)10 * targetFps * deltaTime;
+            //Changing the bullet speed
+            buffer = (float)15 * TARGET_FPS * deltaTime;
+            SDL_Delay(40);
+            bulletRect.y -= (int)buffer;
+            if (bulletRect.y < 0)
+            {
+                shoot = false;
+                SDL_DestroyTexture(textureBullet);
+            }
+            else
+            {
+                SDL_RenderCopy(renderer, textureBullet, IntPtr.Zero, ref bulletRect);
+            }
+            Console.WriteLine("the y of the bullet is: " + bulletRect.y);
+        }
+        void movePlayer(int xPos)
+        {
+            float buffer;
+            buffer = (float)10 * TARGET_FPS * deltaTime;
             if (xPos == -1)
             {
                 playerRect.x -= (int)buffer;
@@ -149,12 +174,6 @@ namespace SI
             {
                 playerRect.x += (int)buffer;
             }
-        }
-        static void shoot(int targetFps, float deltaTime)
-        {
-            float buffer;
-            buffer = (float)10 * targetFps * deltaTime;
-            bulletRect.y += (int)buffer;
         }
     }
 
