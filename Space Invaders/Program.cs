@@ -1,5 +1,6 @@
 ﻿using SDL2;
 using System;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using static SDL2.SDL;
 
@@ -7,32 +8,49 @@ namespace SI
 {
     class Program
     {
+
         static int WINDOW_WIDTH = 800;
         static int WINDOW_HEIGHT = 600;
 
         static int TARGET_FPS = 60;
         float deltaTime;
 
-        static SDL_Rect bulletRect;
-        static SDL_Rect playerRect;
+        SDL_Rect bulletRect;
+        SDL_Rect playerRect;
+        SDL_Rect collisionRect;
 
         nint renderer = IntPtr.Zero;
         nint window = IntPtr.Zero;
         nint texturePlayer = IntPtr.Zero;
         nint textureBullet = IntPtr.Zero;
+        nint textureEnemy = IntPtr.Zero;
+
+        SDL.SDL_Rect[] enemyRect = new SDL.SDL_Rect[3] {
+                new SDL.SDL_Rect() { x = 100, y = 100, w = 70, h = 70 },   // Rectangle 1
+                new SDL.SDL_Rect() { x = 150, y = 100, w = 70, h = 70 },  // Rectangle 2
+                new SDL.SDL_Rect() { x = 200, y = 100, w = 70, h = 70 }   // Rectangle 3
+        };
 
         public bool shoot = false;
+        public bool enemySpawn = true;
         Program()
         {
             SDL_Init(SDL_INIT_VIDEO);
             SDL_CreateWindowAndRenderer(Program.WINDOW_WIDTH, Program.WINDOW_HEIGHT, 0, out window, out renderer);
             SDL_SetWindowTitle(window, "Space Invaders");
             texturePlayer = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, (int)SDL_TextureAccess.SDL_TEXTUREACCESS_TARGET, 100, 100);
-
+            textureEnemy = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, (int)SDL_TextureAccess.SDL_TEXTUREACCESS_TARGET, 70, 70);
+            
             playerRect.w = 100;
             playerRect.h = 100;
             playerRect.x = (WINDOW_WIDTH / 2) - (100 / 2);
             playerRect.y = 400;
+
+            SDL.SDL_Rect[] enemyRect = new SDL.SDL_Rect[3] {
+                new SDL.SDL_Rect() { x = 100, y = 100, w = 70, h = 70 },   // Rectangle 1
+                new SDL.SDL_Rect() { x = 500, y = 100, w = 70, h = 70 },  // Rectangle 2
+                new SDL.SDL_Rect() { x = 800, y = 100, w = 70, h = 70 }   // Rectangle 3
+            };
 
             bulletRect.w = 7;
             bulletRect.h = 20;
@@ -53,7 +71,6 @@ namespace SI
         {
             Program prag = new Program();
 
-            
             SDL_Event events;
             IntPtr keyboardState;
             int arrayKeys;
@@ -123,6 +140,10 @@ namespace SI
             SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
             SDL_RenderClear(renderer);
 
+            SDL_SetRenderTarget(renderer, textureEnemy);
+            SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+            SDL_RenderClear(renderer);
+
             SDL_SetRenderTarget(renderer, IntPtr.Zero);
         }
 
@@ -130,6 +151,18 @@ namespace SI
             if (shoot == true) {
                 projectile();
             }
+            if (enemySpawn) {
+                for (int i = 0; i < enemyRect.Length; i++) {
+                    if (SDL_IntersectRect(ref enemyRect[i], ref bulletRect, out collisionRect) == SDL_bool.SDL_TRUE) {
+                        SDL_DestroyTexture(textureEnemy);
+                        enemySpawn = false;
+                    }
+                    else {               
+                        SDL_RenderCopy(renderer, textureEnemy, IntPtr.Zero, ref enemyRect[i]);
+                    }
+                }
+            }
+            
             SDL_RenderCopy(renderer, texturePlayer, IntPtr.Zero, ref playerRect);
             SDL_RenderPresent(renderer);
         }
