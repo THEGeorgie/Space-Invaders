@@ -16,8 +16,8 @@ namespace SI
         int checkBack = 0;
 
         Random rnd = new Random();
-        int randShoot;
-        int randShootEnemy;
+        int randShoot = 0;
+        int randShootEnemy = 0;
 
         static int TARGET_FPS = 60;
         float deltaTime;
@@ -53,6 +53,8 @@ namespace SI
         bool[] enemySpawn = new bool[3] { true, true, true };
 
         public bool shoot = false;
+        public bool shootEnemy = false;
+        public bool terminate = false;
         Program()
         {
             SDL_Init(SDL_INIT_VIDEO);
@@ -106,6 +108,7 @@ namespace SI
             SDL_Event events;
             IntPtr keyboardState;
             int arrayKeys;
+            int countEnemySpawn = 0;
 
             UInt32 timeold = SDL_GetTicks();
             UInt32 timenew;
@@ -116,6 +119,45 @@ namespace SI
                 prag.update();
                 timenew = SDL_GetTicks();
                 ticks = timeold - timenew;
+                if (prag.terminate == true)
+                {
+                    break;
+                }
+                
+
+                if (prag.shootEnemy == false)
+                {
+                    prag.randShoot = prag.rnd.Next(50);
+                    for (int i = 0; i < prag.enemySpawn.Length; i++) {
+                        if (prag.enemySpawn[i] == true) {
+                            countEnemySpawn++;
+                        }
+                    }
+                    
+                    switch (countEnemySpawn) {
+                        case 3:
+                            prag.randShootEnemy = prag.rnd.Next(3);
+                            break;
+                        case 2:
+                            prag.randShootEnemy = prag.rnd.Next(3);
+                            break;
+                        case 1:
+                            prag.randShootEnemy = 1;
+                            break;
+                    }
+                    countEnemySpawn = 0;
+                    if (prag.randShoot == 10)
+                    {
+                        Console.WriteLine(prag.randShoot);
+                        Console.WriteLine(prag.randShootEnemy);
+                    }
+                    
+                }
+                if (prag.shootEnemy == true) {
+                    //Console.WriteLine(prag.bulletEnemyRect[prag.randShootEnemy].y);
+                }
+
+
 
                 keyboardState = SDL_GetKeyboardState(out arrayKeys);
 
@@ -147,6 +189,10 @@ namespace SI
                             break;
                     }
                 }
+                if (prag.randShoot == 10)
+                {
+                    prag.shootEnemy = true;
+                }
 
                 SDL_Delay(30);
                 timeold = timenew;
@@ -176,11 +222,18 @@ namespace SI
                 bulletRect.y = playerRect.y;
                 bulletRect.x = playerRect.x + 47;
             }
-            if (randShoot <= 10){
+            if (shootEnemy == true)
+            {
                 textureBulletEnemy = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, (int)SDL_TextureAccess.SDL_TEXTUREACCESS_TARGET, 100, 100);
                 SDL_SetRenderTarget(renderer, textureBulletEnemy);
                 SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
                 SDL_RenderClear(renderer);
+            }
+            else
+            {
+                bulletEnemyRect[0].x = enemyRect[0].x + 28;
+                bulletEnemyRect[1].x = enemyRect[1].x + 28;
+                bulletEnemyRect[2].x = enemyRect[2].x + 28;
             }
 
             SDL_SetRenderTarget(renderer, texturePlayer);
@@ -208,9 +261,11 @@ namespace SI
                 // the bullent gets spawned
                 projectile();
             }
-            randShoot = rnd.Next(10);
-            Console.WriteLine(randShoot);
-            projectileEnemy();
+            if (shootEnemy == true)
+            {
+                projectileEnemy();
+            }
+
 
             for (int i = 0; i < enemyRect.Length; i++)
             {
@@ -253,7 +308,7 @@ namespace SI
             //Changing the bullet speed
             buffer = (float)15 * TARGET_FPS * deltaTime;
             bulletRect.y -= (int)buffer;
-            //If it goes over the window surface the bullet gets destryoed if not the bullet contniues being renderd
+            //If it goes beyond the window surface the bullet gets destryoed if not the bullet contniues being renderd
             for (int i = 0; i < enemyRect.Length - 1; i++)
             {
                 if (bulletRect.y < 0 || SDL_IntersectRect(ref enemyRect[i], ref bulletRect, out collisionRect) == SDL_bool.SDL_TRUE)
@@ -272,21 +327,22 @@ namespace SI
             float buffer;
             //Changing the bullet speed
             buffer = (float)15 * TARGET_FPS * deltaTime;
-            for (int i = 0; i < enemyRect.Length - 1; i++)
+
+            bulletEnemyRect[randShootEnemy].y += (int)buffer;
+
+            if (bulletEnemyRect[randShootEnemy].y > 600)
             {
-                if (randShoot <= 9)
-                {
-                    bulletEnemyRect[i].y += (int)buffer;
-                    
-                    if (bulletEnemyRect[i].y < 0 || SDL_IntersectRect(ref enemyRect[i], ref bulletEnemyRect[i], out collisionRect) == SDL_bool.SDL_TRUE)
-                    {
-                        SDL_DestroyTexture(textureBullet);
-                    }
-                    else
-                    {
-                        SDL_RenderCopy(renderer, textureBulletEnemy, IntPtr.Zero, ref bulletEnemyRect[i]);
-                    }
-                }
+                SDL_DestroyTexture(textureBullet);
+                shootEnemy = false;
+            }
+            else if (SDL_IntersectRect(ref playerRect, ref bulletEnemyRect[randShootEnemy], out collisionRect) == SDL_bool.SDL_TRUE) {
+                SDL_DestroyTexture(textureBullet);
+                shootEnemy = false;
+                terminate = true;
+            }
+            else
+            {
+                SDL_RenderCopy(renderer, textureBulletEnemy, IntPtr.Zero, ref bulletEnemyRect[randShootEnemy]);
             }
         }
         void move(int xPos)
