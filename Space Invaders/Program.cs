@@ -24,7 +24,9 @@ namespace SI
 
         SDL_Rect bulletRect;
         SDL_Rect playerRect;
+
         SDL_Rect collisionRect;
+
         SDL_Rect collisionBrRect;
         SDL_Rect collisionBlRect;
         SDL_Rect collisionPlayerRect;
@@ -39,9 +41,9 @@ namespace SI
         nint textureEnemy = IntPtr.Zero;
 
         SDL.SDL_Rect[] enemyRect = new SDL.SDL_Rect[3] {
-                new SDL.SDL_Rect() { x = 100, y = 100, w = 70, h = 70 },
-                new SDL.SDL_Rect() { x = 200, y = 100, w = 70, h = 70 },
-                new SDL.SDL_Rect() { x = 300, y = 100, w = 70, h = 70 }
+                new SDL.SDL_Rect() { x = 100, y = 100, w = 50, h = 50 },
+                new SDL.SDL_Rect() { x = 200, y = 100, w = 50, h = 50 },
+                new SDL.SDL_Rect() { x = 300, y = 100, w = 50, h = 50 }
         };
 
         SDL.SDL_Rect[] bulletEnemyRect = new SDL.SDL_Rect[3] {
@@ -49,6 +51,73 @@ namespace SI
                 new SDL.SDL_Rect() { x = 200, y = 100, w = 7, h = 20 },
                 new SDL.SDL_Rect() { x = 300, y = 100, w = 7, h = 20 }
         };
+
+        SDL.SDL_Rect[,] wallRect = new SDL.SDL_Rect[,] {
+            {
+                new SDL.SDL_Rect() { x = 100, y = 390, w = 10, h = 20 },
+                new SDL.SDL_Rect() { x = 110, y = 390, w = 10, h = 20 },
+                new SDL.SDL_Rect() { x = 120, y = 390, w = 10, h = 20 },
+                new SDL.SDL_Rect() { x = 130, y = 390, w = 10, h = 20 },
+                new SDL.SDL_Rect() { x = 140, y = 390, w = 10, h = 20 },
+                new SDL.SDL_Rect() { x = 150, y = 390, w = 10, h = 20 },
+            },
+            {
+                new SDL.SDL_Rect() { x = 100, y = 410, w = 10, h = 20 },
+                new SDL.SDL_Rect() { x = 110, y = 410, w = 10, h = 20 },
+                new SDL.SDL_Rect() { x = 120, y = 410, w = 10, h = 20 },
+                new SDL.SDL_Rect() { x = 130, y = 410, w = 10, h = 20 },
+                new SDL.SDL_Rect() { x = 140, y = 410, w = 10, h = 20 },
+                new SDL.SDL_Rect() { x = 150, y = 410, w = 10, h = 20 },
+            },
+        };
+
+        SDL.SDL_Rect[,] wallCollisionRect = new SDL.SDL_Rect[,]
+        {
+            {
+                new SDL.SDL_Rect(),
+                new SDL.SDL_Rect(),
+                new SDL.SDL_Rect(),
+                new SDL.SDL_Rect(),
+                new SDL.SDL_Rect(),
+                new SDL.SDL_Rect(),
+            },
+            {
+                new SDL.SDL_Rect(),
+                new SDL.SDL_Rect(),
+                new SDL.SDL_Rect(),
+                new SDL.SDL_Rect(),
+                new SDL.SDL_Rect(),
+                new SDL.SDL_Rect(),
+            }
+        };
+        SDL.SDL_Rect[,] wallCollision1Rect;
+        SDL.SDL_Rect[,] wallCollision2Rect;
+        SDL.SDL_Rect[,] wallCollision3Rect;
+        SDL.SDL_Rect[,] wallCollision4Rect;
+        SDL.SDL_Rect[,] wallCollision5Rect;
+
+        SDL.SDL_Rect[,] wallRect1 = new SDL.SDL_Rect[,]
+        {
+
+        };
+        SDL.SDL_Rect[,] wallRect2 = new SDL.SDL_Rect[,]
+        {
+
+        };
+        SDL.SDL_Rect[,] wallRect3 = new SDL.SDL_Rect[,]
+        {
+
+        };
+        SDL.SDL_Rect[,] wallRect4 = new SDL.SDL_Rect[,]
+        {
+
+        };
+        SDL.SDL_Rect[,] wallRect5 = new SDL.SDL_Rect[,]
+        {
+
+        };
+
+        nint[] clusterWall;
 
         bool[] enemySpawn = new bool[3] { true, true, true };
 
@@ -60,8 +129,8 @@ namespace SI
             SDL_Init(SDL_INIT_VIDEO);
             SDL_CreateWindowAndRenderer(Program.WINDOW_WIDTH, Program.WINDOW_HEIGHT, 0, out window, out renderer);
             SDL_SetWindowTitle(window, "Space Invaders");
-            texturePlayer = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, (int)SDL_TextureAccess.SDL_TEXTUREACCESS_TARGET, 100, 100);
-            textureEnemy = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, (int)SDL_TextureAccess.SDL_TEXTUREACCESS_TARGET, 70, 70);
+            texturePlayer = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, (int)SDL_TextureAccess.SDL_TEXTUREACCESS_TARGET, 50, 50);
+            textureEnemy = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, (int)SDL_TextureAccess.SDL_TEXTUREACCESS_TARGET, 50, 50);
 
             bulletEnemyRect[0].x = enemyRect[0].x + 28;
             bulletEnemyRect[1].x = enemyRect[1].x + 28;
@@ -70,10 +139,36 @@ namespace SI
             bulletEnemyRect[1].y = enemyRect[1].y;
             bulletEnemyRect[2].y = enemyRect[2].y;
 
-            playerRect.w = 100;
-            playerRect.h = 100;
+            wallRect1 = wallRect.Clone() as SDL.SDL_Rect[,];
+            wallRect2 = wallRect.Clone() as SDL.SDL_Rect[,];
+            wallRect3 = wallRect.Clone() as SDL.SDL_Rect[,];
+            wallRect4 = wallRect.Clone() as SDL.SDL_Rect[,];
+            wallRect5 = wallRect.Clone() as SDL.SDL_Rect[,];
+
+            wallCollision1Rect = wallCollisionRect.Clone() as SDL.SDL_Rect[,];
+            wallCollision2Rect = wallCollisionRect.Clone() as SDL.SDL_Rect[,];
+            wallCollision3Rect = wallCollisionRect.Clone() as SDL.SDL_Rect[,];
+            wallCollision4Rect = wallCollisionRect.Clone() as SDL.SDL_Rect[,];
+            wallCollision5Rect = wallCollisionRect.Clone() as SDL.SDL_Rect[,];
+
+            for (int i = 0; i < wallRect1.Length / 2; i++)
+            {
+                wallRect1[0, i].x += 100;
+                wallRect1[1, i].x += 100;
+                wallRect2[0, i].x += 200;
+                wallRect2[1, i].x += 200;
+                wallRect3[0, i].x += 300;
+                wallRect3[1, i].x += 300;
+                wallRect4[0, i].x += 400;
+                wallRect4[1, i].x += 400;
+                wallRect5[0, i].x += 500;
+                wallRect5[1, i].x += 500;
+            }
+
+            playerRect.w = 50;
+            playerRect.h = 50;
             playerRect.x = (WINDOW_WIDTH / 2) - (100 / 2);
-            playerRect.y = 400;
+            playerRect.y = 500;
 
             borderLeftRect.x = 0;
             borderLeftRect.y = 0;
@@ -116,6 +211,7 @@ namespace SI
             bool loop = true;
             while (loop)
             {
+                Console.WriteLine(prag.shootEnemy);
                 prag.update();
                 timenew = SDL_GetTicks();
                 ticks = timeold - timenew;
@@ -123,38 +219,42 @@ namespace SI
                 {
                     break;
                 }
-                
+
 
                 if (prag.shootEnemy == false)
                 {
-                    prag.randShoot = prag.rnd.Next(50);
-                    for (int i = 0; i < prag.enemySpawn.Length; i++) {
-                        if (prag.enemySpawn[i] == true) {
+                    prag.randShoot = prag.rnd.Next(20);
+                    if (prag.randShoot == 10)
+                    {
+                        Console.WriteLine(prag.randShoot);
+
+                    }
+                    for (int i = 0; i < prag.enemySpawn.Length; i++)
+                    {
+                        if (prag.enemySpawn[i] == true)
+                        {
                             countEnemySpawn++;
                         }
                     }
-                    
-                    switch (countEnemySpawn) {
+                    Console.WriteLine(countEnemySpawn);
+
+                    switch (countEnemySpawn)
+                    {
                         case 3:
-                            prag.randShootEnemy = prag.rnd.Next(3);
+                            prag.randShootEnemy = prag.rnd.Next(0, 3);
                             break;
                         case 2:
-                            prag.randShootEnemy = prag.rnd.Next(3);
+                            prag.randShootEnemy = prag.rnd.Next(0, 2);
                             break;
                         case 1:
-                            prag.randShootEnemy = 1;
+                            prag.randShootEnemy = 0;
                             break;
                     }
                     countEnemySpawn = 0;
                     if (prag.randShoot == 10)
                     {
-                        Console.WriteLine(prag.randShoot);
-                        Console.WriteLine(prag.randShootEnemy);
+                        prag.shootEnemy = true;
                     }
-                    
-                }
-                if (prag.shootEnemy == true) {
-                    //Console.WriteLine(prag.bulletEnemyRect[prag.randShootEnemy].y);
                 }
 
 
@@ -189,10 +289,7 @@ namespace SI
                             break;
                     }
                 }
-                if (prag.randShoot == 10)
-                {
-                    prag.shootEnemy = true;
-                }
+
 
                 SDL_Delay(30);
                 timeold = timenew;
@@ -205,6 +302,7 @@ namespace SI
         }
         void update()
         {
+            textureBulletEnemy = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, (int)SDL_TextureAccess.SDL_TEXTUREACCESS_TARGET, 100, 100);
 
 
             SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -224,7 +322,6 @@ namespace SI
             }
             if (shootEnemy == true)
             {
-                textureBulletEnemy = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, (int)SDL_TextureAccess.SDL_TEXTUREACCESS_TARGET, 100, 100);
                 SDL_SetRenderTarget(renderer, textureBulletEnemy);
                 SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
                 SDL_RenderClear(renderer);
@@ -250,6 +347,26 @@ namespace SI
             SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
             SDL_RenderDrawRect(renderer, ref borderLeftRect);
             SDL_RenderDrawRect(renderer, ref borderRightRect);
+
+            SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+
+            for (int i = 0; i < wallRect.Length / 2; i++)
+            {
+                SDL_RenderDrawRect(renderer, ref wallRect[0, i]);
+                SDL_RenderDrawRect(renderer, ref wallRect[1, i]);
+                SDL_RenderDrawRect(renderer, ref wallRect1[0, i]);
+                SDL_RenderDrawRect(renderer, ref wallRect1[1, i]);
+                SDL_RenderDrawRect(renderer, ref wallRect2[0, i]);
+                SDL_RenderDrawRect(renderer, ref wallRect2[1, i]);
+                SDL_RenderDrawRect(renderer, ref wallRect3[0, i]);
+                SDL_RenderDrawRect(renderer, ref wallRect3[1, i]);
+                SDL_RenderDrawRect(renderer, ref wallRect4[0, i]);
+                SDL_RenderDrawRect(renderer, ref wallRect4[1, i]);
+                SDL_RenderDrawRect(renderer, ref wallRect5[0, i]);
+                SDL_RenderDrawRect(renderer, ref wallRect5[1, i]);
+            }
+
+
         }
 
         void present(int ticks)
@@ -265,7 +382,6 @@ namespace SI
             {
                 projectileEnemy();
             }
-
 
             for (int i = 0; i < enemyRect.Length; i++)
             {
@@ -285,6 +401,122 @@ namespace SI
                         moveEnemy();
                         SDL_RenderCopy(renderer, textureEnemy, IntPtr.Zero, ref enemyRect[i]);
                     }
+                }
+            }
+            for (int i = 0; i < wallRect.Length / 2; i++)
+            {
+                if (SDL_IntersectRect(ref wallRect[0, i], ref bulletEnemyRect[randShootEnemy], out wallCollisionRect[0, i]) == SDL_bool.SDL_TRUE)
+                {
+                    wallRect[0, i].h = 0;
+                    wallRect[0, i].w = 0;
+                    SDL_DestroyTexture(textureBullet);
+                    shootEnemy = false;
+                    randShoot = 0;
+                    randShootEnemy = 0;
+                }
+                if (SDL_IntersectRect(ref wallRect[1, i], ref bulletEnemyRect[randShootEnemy], out wallCollisionRect[1, i]) == SDL_bool.SDL_TRUE)
+                {
+                    wallRect[1, i].h = 0;
+                    wallRect[1, i].w = 0;
+                    SDL_DestroyTexture(textureBullet);
+                    shootEnemy = false;
+                    randShoot = 0;
+                    randShootEnemy = 0;
+                }
+
+                if (SDL_IntersectRect(ref wallRect1[0, i], ref bulletEnemyRect[randShootEnemy], out wallCollision1Rect[0, i]) == SDL_bool.SDL_TRUE)
+                {
+                    wallRect1[0, i].h = 0;
+                    wallRect1[0, i].w = 0;
+                    SDL_DestroyTexture(textureBullet);
+                    shootEnemy = false;
+                    randShoot = 0;
+                    randShootEnemy = 0;
+                }
+                if (SDL_IntersectRect(ref wallRect1[1, i], ref bulletEnemyRect[randShootEnemy], out wallCollision1Rect[1, i]) == SDL_bool.SDL_TRUE)
+                {
+                    wallRect1[1, i].h = 0;
+                    wallRect1[1, i].w = 0;
+                    SDL_DestroyTexture(textureBullet);
+                    shootEnemy = false;
+                    randShoot = 0;
+                    randShootEnemy = 0;
+                }
+
+                if (SDL_IntersectRect(ref wallRect2[0, i], ref bulletEnemyRect[randShootEnemy], out wallCollision2Rect[0, i]) == SDL_bool.SDL_TRUE)
+                {
+                    wallRect2[0, i].h = 0;
+                    wallRect2[0, i].w = 0;
+                    SDL_DestroyTexture(textureBullet);
+                    shootEnemy = false;
+                    randShoot = 0;
+                    randShootEnemy = 0;
+                }
+                if (SDL_IntersectRect(ref wallRect2[1, i], ref bulletEnemyRect[randShootEnemy], out wallCollision2Rect[1, i]) == SDL_bool.SDL_TRUE)
+                {
+                    wallRect2[1, i].h = 0;
+                    wallRect2[1, i].w = 0;
+                    SDL_DestroyTexture(textureBullet);
+                    shootEnemy = false;
+                    randShoot = 0;
+                    randShootEnemy = 0;
+                }
+
+                if (SDL_IntersectRect(ref wallRect3[0, i], ref bulletEnemyRect[randShootEnemy], out wallCollision3Rect[0, i]) == SDL_bool.SDL_TRUE)
+                {
+                    wallRect3[0, i].h = 0;
+                    wallRect3[0, i].w = 0;
+                    SDL_DestroyTexture(textureBullet);
+                    shootEnemy = false;
+                    randShoot = 0;
+                    randShootEnemy = 0;
+                }
+                if (SDL_IntersectRect(ref wallRect3[1, i], ref bulletEnemyRect[randShootEnemy], out wallCollision3Rect[1, i]) == SDL_bool.SDL_TRUE)
+                {
+                    wallRect3[1, i].h = 0;
+                    wallRect3[1, i].w = 0;
+                    SDL_DestroyTexture(textureBullet);
+                    shootEnemy = false;
+                    randShoot = 0;
+                    randShootEnemy = 0;
+                }
+
+                if (SDL_IntersectRect(ref wallRect4[0, i], ref bulletEnemyRect[randShootEnemy], out wallCollision4Rect[0, i]) == SDL_bool.SDL_TRUE)
+                {
+                    wallRect4[0, i].h = 0;
+                    wallRect4[0, i].w = 0;
+                    SDL_DestroyTexture(textureBullet);
+                    shootEnemy = false;
+                    randShoot = 0;
+                    randShootEnemy = 0;
+                }
+                if (SDL_IntersectRect(ref wallRect4[1, i], ref bulletEnemyRect[randShootEnemy], out wallCollision4Rect[1, i]) == SDL_bool.SDL_TRUE)
+                {
+                    wallRect4[1, i].h = 0;
+                    wallRect4[1, i].w = 0;
+                    SDL_DestroyTexture(textureBullet);
+                    shootEnemy = false;
+                    randShoot = 0;
+                    randShootEnemy = 0;
+                }
+
+                if (SDL_IntersectRect(ref wallRect5[0, i], ref bulletEnemyRect[randShootEnemy], out wallCollision5Rect[0, i]) == SDL_bool.SDL_TRUE)
+                {
+                    wallRect5[0, i].h = 0;
+                    wallRect5[0, i].w = 0;
+                    SDL_DestroyTexture(textureBullet);
+                    shootEnemy = false;
+                    randShoot = 0;
+                    randShootEnemy = 0;
+                }
+                if (SDL_IntersectRect(ref wallRect5[1, i], ref bulletEnemyRect[randShootEnemy], out wallCollision5Rect[1, i]) == SDL_bool.SDL_TRUE)
+                {
+                    wallRect5[1, i].h = 0;
+                    wallRect5[1, i].w = 0;
+                    SDL_DestroyTexture(textureBullet);
+                    shootEnemy = false;
+                    randShoot = 0;
+                    randShootEnemy = 0;
                 }
             }
 
@@ -308,6 +540,7 @@ namespace SI
             //Changing the bullet speed
             buffer = (float)15 * TARGET_FPS * deltaTime;
             bulletRect.y -= (int)buffer;
+
             //If it goes beyond the window surface the bullet gets destryoed if not the bullet contniues being renderd
             for (int i = 0; i < enemyRect.Length - 1; i++)
             {
@@ -321,6 +554,7 @@ namespace SI
                     SDL_RenderCopy(renderer, textureBullet, IntPtr.Zero, ref bulletRect);
                 }
             }
+
         }
         void projectileEnemy()
         {
@@ -334,17 +568,22 @@ namespace SI
             {
                 SDL_DestroyTexture(textureBullet);
                 shootEnemy = false;
+                randShoot = 0;
+                randShootEnemy = 0;
             }
-            else if (SDL_IntersectRect(ref playerRect, ref bulletEnemyRect[randShootEnemy], out collisionRect) == SDL_bool.SDL_TRUE) {
+            else if (SDL_IntersectRect(ref playerRect, ref bulletEnemyRect[randShootEnemy], out collisionRect) == SDL_bool.SDL_TRUE)
+            {
                 SDL_DestroyTexture(textureBullet);
                 shootEnemy = false;
                 terminate = true;
+
             }
             else
             {
                 SDL_RenderCopy(renderer, textureBulletEnemy, IntPtr.Zero, ref bulletEnemyRect[randShootEnemy]);
             }
         }
+
         void move(int xPos)
         {
             float buffer;
